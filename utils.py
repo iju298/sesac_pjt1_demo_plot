@@ -382,3 +382,54 @@ def plot_chapter_avg_time_pie(student_df: pd.DataFrame, lecture: int, save: bool
         save_fig_to_html(fig, output_path=f'{path}/lec_{lecture}_chapter_avg_time_pie.html')
 
     return fig
+
+
+
+def plot_chapter_exam_score(student_df: pd.DataFrame, lecture: int, save: bool = True, path='./plots'):
+    """
+    특정 lecture에 대해 챕터별 시험 평균 점수를 라인 플롯으로 시각화합니다.
+
+    Parameters:
+    - student_df (pd.DataFrame): 수강 데이터
+    - lecture (int): 강의 번호
+    - save (bool): 저장 여부
+    - path (str): 저장 경로
+
+    Returns:
+    - plotly.graph_objects.Figure
+    """
+    # 1. 강의 필터링
+    df = student_df[student_df["lecture"] == lecture]
+    if df.empty:
+        print(f"No data found for Lecture {lecture}")
+        return
+
+    # 2. 평균 시험 점수 계산
+    df = df.copy()
+    df["exam_avg"] = (df["exam1"] + df["exam2"]) / 2
+
+    # 3. 챕터별 평균 점수 집계
+    chapter_avg = df.groupby("chapter")["exam_avg"].mean().reset_index()
+    chapter_avg = chapter_avg.sort_values("chapter")
+
+    # 4. 라인 플롯 생성
+    fig = px.line(
+        chapter_avg,
+        x="chapter",
+        y="exam_avg",
+        markers=True,
+        labels={"chapter": "Chapter", "exam_avg": "Average Exam Score"},
+        title=f"Avg Exam Score by Chapter - Lecture {lecture}"
+    )
+
+    fig.update_traces(line=dict(width=7))
+    fig.update_layout(
+        xaxis=dict(dtick=1, tickfont=dict(size=22), title=dict(font=dict(size=24))),
+        yaxis=dict(range=[0, 100], tickfont=dict(size=22), title=dict(font=dict(size=24))),
+        title=dict(font=dict(size=20))
+    )
+
+    if save:
+        save_fig_to_html(fig, output_path=f'{path}/lec_{lecture}_chapter_exam_avg_line.html')
+
+    return fig
