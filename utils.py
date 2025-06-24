@@ -336,3 +336,49 @@ def plot_score_distribution_by_chapter(student_df: pd.DataFrame, lecture: int, c
     
     if save:
         save_fig_to_html(fig, output_path=f'{path}/lec_{lecture}_ch_{chapter}_{exam_info}_score.html')
+
+
+import plotly.express as px
+import pandas as pd
+
+def plot_chapter_avg_time_pie(student_df: pd.DataFrame, lecture: int, save: bool = True, path='./plots'):
+    """
+    특정 lecture에서 chapter별 평균 학습 소요시간의 비중을 파이차트로 시각화합니다.
+    챕터 번호 순서로 정렬하며, 텍스트는 차트 내부에 가로로 표시되고 단위 (m)를 포함합니다.
+    """
+    # 1. 강의 필터링
+    df = student_df[student_df["lecture"] == lecture]
+    if df.empty:
+        print(f"No data found for Lecture {lecture}")
+        return
+
+    # 2. chapter별 평균 학습시간 계산 후 정렬
+    chapter_avg = df.groupby("chapter")["time"].mean().reset_index()
+    chapter_avg = chapter_avg.sort_values("chapter")
+
+    # 3. 파이차트 생성 (순서 고정)
+    fig = px.pie(
+        chapter_avg,
+        names="chapter",
+        values="time",
+        title=f"Avg Study Time by Chapter - Lecture {lecture}",
+        hole=0.4,
+        category_orders={"chapter": chapter_avg["chapter"].tolist()}
+    )
+
+    # 4. 텍스트 설정: 내부, 가로, (m) 단위 표시
+    fig.update_traces(
+        textinfo='none',
+        texttemplate='%{label}<br>%{percent}<br>%{value:.1f}(min)',
+        textposition="inside",
+        insidetextorientation="horizontal",
+        textfont_size=25
+    )
+
+    fig.update_layout(title=dict(font=dict(size=20)))
+
+    # 5. 저장
+    if save:
+        save_fig_to_html(fig, output_path=f'{path}/lec_{lecture}_chapter_avg_time_pie.html')
+
+    return fig
