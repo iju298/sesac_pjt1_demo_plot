@@ -247,3 +247,63 @@ def report_student_skill_analysis(student_df: pd.DataFrame, lecture_df: pd.DataF
         "most_weighted_chapter_for_worst_skill": best_chapter_info,
         "progress_percent": round(progress_percent, 2)
     }
+
+
+
+def plot_score_distribution_by_chapter(student_df: pd.DataFrame, lecture: int, chapter: int,
+                                       exam='all', bin_size: int = 10, save:bool= True, path='./plots'):
+    """
+    특정 lecture-chapter에 대해 시험 점수 구간별 학생 수를 바 차트로 시각화합니다.
+
+    Parameters:
+    - student_df: 수강 데이터프레임
+    - lecture: 강의 번호
+    - chapter: 챕터 번호
+    - exam: 'all', 1, 2 중 하나 (기본 'all' → exam1과 exam2의 평균)
+    - bin_size: 점수 구간 폭 (기본 10)
+
+    Returns:
+    - Plotly bar chart 출력
+    """
+    # 데이터 필터링
+    df = student_df[(student_df["lecture"] == lecture) & (student_df["chapter"] == chapter)]
+    if df.empty:
+        print(f"No student data found for Lecture {lecture}, Chapter {chapter}")
+        return
+
+    df = df.copy()
+
+    # 선택한 시험 점수 계산
+    if exam == "all":
+        df["score"] = (df["exam1"] + df["exam2"]) / 2
+        exam_label = "Average of Exam1 & Exam2"
+        exam_info = 'exam_all'
+    elif isinstance(exam, int) and exam in [1, 2]:
+        df["score"] = df[f"exam{exam}"]
+        exam_label = f"Exam{exam} Score"
+        exam_info = f'exam_{exam}'
+    else:
+        raise ValueError("exam 파라미터는 'all' 또는 정수 1, 2 중 하나여야 합니다.")
+
+    # 점수 구간 분류
+    df["score_bin"] = pd.cut(df["score"],
+                             bins=range(0, 101, bin_size),
+                             right=False,
+                             include_lowest=True)
+
+    # 구간별 count
+    score_dist = df["score_bin"].value_counts().sort_index().reset_index()
+    score_dist.columns = ["Score Range", "Student Count"]
+    score_dist["Score Range"] = score_dist["Score Range"].astype(str)
+
+    # 시각화
+    fig = px.bar(score_dist,
+                 x="Score Range",
+                 y="Student Count",
+                 title=f"Score Distribution (Lecture {lecture}, Chapter {chapter}) - {exam_label}",
+                 labels={"Score Range": "Score Interval", "Student Count": "Number of Students"})
+
+    fig.update_layout(xaxis_type="category")
+    
+    if save:
+        save_fig_to_html(fig, output_path=f'{path}/lec_{lecture}_ch_{chapter}_{exam_info}_score.html')
