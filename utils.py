@@ -433,3 +433,51 @@ def plot_chapter_exam_score(student_df: pd.DataFrame, lecture: int, save: bool =
         save_fig_to_html(fig, output_path=f'{path}/lec_{lecture}_chapter_exam_avg_line.html')
 
     return fig
+
+
+
+def plot_chapter_progress_bar(student_df: pd.DataFrame, lecture: int, save: bool = True, path='./plots'):
+    """
+    특정 lecture에 대해 챕터별 평균 진척도(progress)를 바 차트로 시각화합니다.
+
+    Parameters:
+    - student_df (pd.DataFrame): 수강 데이터
+    - lecture (int): 강의 번호
+    - save (bool): 저장 여부
+    - path (str): 저장 경로
+
+    Returns:
+    - plotly.graph_objects.Figure
+    """
+    # 1. 필터링
+    df = student_df[student_df["lecture"] == lecture]
+    if df.empty:
+        print(f"No data found for Lecture {lecture}")
+        return
+
+    # 2. chapter별 평균 progress 계산
+    chapter_progress = df.groupby("chapter")["progress"].mean().reset_index()
+    chapter_progress = chapter_progress.sort_values("chapter")
+    chapter_progress['progress']*=100
+    # 3. 바 차트 생성
+    fig = px.bar(
+        chapter_progress,
+        x="chapter",
+        y="progress",
+        labels={"chapter": "Chapter", "progress": "Avg Progress (%)"},
+        title=f"Average Progress per Chapter - Lecture {lecture}",
+        text_auto=".1f"
+    )
+
+    # 4. 스타일 조정
+    fig.update_layout(
+        yaxis=dict(range=[0, 100], tickfont=dict(size=22), title=dict(font=dict(size=24))),
+        xaxis=dict(dtick=1, tickfont=dict(size=22), title=dict(font=dict(size=24))),
+        title=dict(font=dict(size=20))
+    )
+    fig.update_traces(textfont_size=20)  # ✅ 바 위 숫자 크기 조절
+
+    if save:
+        save_fig_to_html(fig, output_path=f'{path}/lec_{lecture}_chapter_progress_bar.html')
+
+    return fig
