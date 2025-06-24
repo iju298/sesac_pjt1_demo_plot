@@ -42,11 +42,24 @@ def plot_student_lecture_time(student_df: pd.DataFrame, student_name: str, lectu
         title=f"{student_name}'s Study Time per Chapter (Lecture {lecture})"
     )
 
-    # y축 0부터 시작
+    # 라인 스타일 및 축 설정
+    fig.update_traces(line=dict(width=7))  # 라인 두께 조정
+
     fig.update_layout(
-        xaxis=dict(dtick=1),
-        yaxis=dict(range=[0, df["time"].max() * 1.1])  # 최대값보다 약간 여유 있게
+    xaxis=dict(
+            dtick=1,
+            tickfont=dict(size=22),  # x축 눈금 폰트
+            title=dict(font=dict(size=24))  # ✅ x축 타이틀 폰트
+        ),
+        yaxis=dict(
+            range=[0, df["time"].max() * 1.1],
+            tickfont=dict(size=22),  # y축 눈금 폰트
+            title=dict(font=dict(size=24))  # ✅ y축 타이틀 폰트
+        ),
+        title=dict(font=dict(size=20))  # 전체 그래프 제목
     )
+
+
 
     if save:
         save_fig_to_html(fig, output_path=f'{path}/{student_name}_lec_{lecture}_time.html')
@@ -85,9 +98,20 @@ def plot_student_chapter_count(student_df: pd.DataFrame, student_name: str, lect
         title=f"{student_name}'s Incorrect Count per Chapter (Lecture {lecture})"
     )
 
+    fig.update_traces(line=dict(width=7))  # 라인 두께 조정
+
     fig.update_layout(
-        xaxis=dict(dtick=1),
-        yaxis=dict(range=[0, df["count"].max() * 1.1])
+        xaxis=dict(
+            dtick=1,
+            tickfont=dict(size=22),  # X축 눈금 폰트
+            title=dict(font=dict(size=24))  # X축 제목 폰트
+        ),
+        yaxis=dict(
+            range=[0, df["count"].max() * 1.1],
+            tickfont=dict(size=22),  # Y축 눈금 폰트
+            title=dict(font=dict(size=24))  # Y축 제목 폰트
+        ),
+        title=dict(font=dict(size=20))  # 전체 그래프 제목 폰트
     )
 
 
@@ -146,11 +170,16 @@ def plot_student_proficiency_radar(student_df: pd.DataFrame, lecture_df: pd.Data
 
     fig = go.Figure()
     fig.add_trace(go.Scatterpolar(
-        r=values,
-        theta=categories + [categories[0]],
-        fill='toself',
-        name=student_name
+    r=values,
+    theta=categories + [categories[0]],
+    fill='toself',
+    name=student_name,
+    text=[f"{v:.1f}" for v in values],
+    textposition="top center",
+    mode='lines+markers+text',
+    textfont=dict(size=16)  # 숫자 크기 조절 (기본보다 크게)
     ))
+
 
     fig.update_layout(
         polar=dict(
