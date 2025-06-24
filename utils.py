@@ -160,6 +160,20 @@ def plot_student_proficiency_radar(student_df: pd.DataFrame, lecture_df: pd.Data
         title=f"{student_name}'s Skill Proficiency"
     )
 
+    fig.update_layout(
+    polar=dict(
+        radialaxis=dict(visible=True, range=[0, 100]),
+        angularaxis=dict(
+            tickfont=dict(size=20),
+            rotation=90,
+            direction='clockwise'
+        )
+    ),
+    showlegend=True,
+    title=dict(text=f"{student_name}'s Skill Proficiency", font=dict(size=20))
+)
+
+
     if save:
         save_fig_to_html(fig, output_path=f'{path}/{student_name}_skill.html')
 
